@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Google_maps_ft extends EE_Fieldtype {
+class Fieldtype_name_ft extends EE_Fieldtype {
 	
 	var $info = array(
 		'name'		=> 'FT name',
