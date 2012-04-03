@@ -3,7 +3,7 @@
 class Address_group_ft extends EE_Fieldtype {
 	
 	var $info = array(
-		'name'		=> 'Address Demo',
+		'name'		=> 'Address Group',
 		'version'	=> '1.0'
 	);
 	
@@ -23,6 +23,7 @@ class Address_group_ft extends EE_Fieldtype {
 	 */
 	function display_field($data)
 	{
+		// Load our language file as we have field labels to show
 		$this->EE->lang->loadfile('address_group');
 		
 		// Check for post data first
@@ -41,6 +42,7 @@ class Address_group_ft extends EE_Fieldtype {
 		}
 		else
 		{
+			// Note the use of our settings array to grab default settings if they exist
 			foreach($this->address_fields as $key)
 			{
 				$$key = (isset($this->settings[$key])) ? $this->settings[$key] : '';
@@ -48,6 +50,7 @@ class Address_group_ft extends EE_Fieldtype {
 		}
 
 		// Placeholder data in order to skip core required check
+		// This is necessary or fields set to 'required' will never get past validation
 		$form = form_hidden('field_id_'.$this->field_id, 'address_group_placeholder').'<table>';
 		
 		foreach($this->address_fields as $key)
@@ -56,6 +59,7 @@ class Address_group_ft extends EE_Fieldtype {
 		}
 
 		$form .= '</table>';
+
 		return $form;
 	}
 
@@ -70,6 +74,9 @@ class Address_group_ft extends EE_Fieldtype {
 	 */
 	function display_global_settings()
 	{
+		// We really don't need global settings
+		// But here they are as an example!
+
 		$this->EE->lang->loadfile('address_group');
 		$data = array_merge($this->settings, $_POST);
 		
@@ -98,7 +105,6 @@ class Address_group_ft extends EE_Fieldtype {
 	function display_settings($data)
 	{
 		$this->EE->lang->loadfile('address_group');
-		$prefix = 'address_group';
 	
 		foreach($this->address_fields as $key)
 		{
@@ -108,8 +114,6 @@ class Address_group_ft extends EE_Fieldtype {
 				lang($key, $key), form_input($key, $data[$key])
 				);
 		}
-
-		$this->text_direction_row($data, $prefix);
 	}
 
 	// --------------------------------------------------------------------
@@ -145,6 +149,8 @@ class Address_group_ft extends EE_Fieldtype {
 	 */
 	function replace_tag($data, $params = array(), $tagdata = FALSE)
 	{
+		// If there is no data?  We'll just return and variable or pair
+		// replaced with empty string
 		if (empty($data))
 		{
 			return;
@@ -153,23 +159,46 @@ class Address_group_ft extends EE_Fieldtype {
 		// We have data!
 		list($street_address, $city, $state, $zip) = explode('|', $data);
 		
+		// Do we have a tag pair?
 		if ($tagdata !== FALSE)
 		{
+			// Let's prefix our variables to reduce likelihood of collisions
 			$address_array = array(
 				'ag_street_address' => $street_address, 
 				'ag_city' => $city, 
 				'ag_state' => $state, 
 				'ag_zipcode' => $zip												
 			);
-			
 
-			
 			$tagdata = $this->EE->functions->prep_conditionals($tagdata, $address_array);
 			$tagdata = $this->EE->functions->var_swap($tagdata, $address_array);
 		}		
 		else
 		{
-			$tagdata = '<p>'.$street_address.'<br />'.$city.', '.$state.' '.$zip.'</p>';
+			// We could, and probably should, run this through the parser
+			/*
+				$this->EE->typography->parse_type(
+				$this->EE->functions->encode_ee_tags($data),
+				array(
+					'text_format'	=> $this->row['field_ft_'.$this->field_id],
+					'html_format'	=> $this->row['channel_html_formatting'],
+					'auto_links'	=> $this->row['channel_auto_link_urls'],
+					'allow_img_url' => $this->row['channel_allow_img_urls']
+					)
+				);			
+			*/
+			
+			$tagdata = $street_address."\n".$city.', '.$state.' '.$zip;
+
+			$tagdata = 	$this->EE->typography->parse_type(
+				$this->EE->functions->encode_ee_tags($tagdata),
+				array(
+					'text_format'	=> $this->row['field_ft_'.$this->field_id],
+					'html_format'	=> $this->row['channel_html_formatting'],
+					'auto_links'	=> 'n',
+					'allow_img_url' => 'n'
+					)
+				);
 		}
 		
 		return $tagdata;
@@ -179,9 +208,12 @@ class Address_group_ft extends EE_Fieldtype {
 	// --------------------------------------------------------------------
 	
 	/**
-	 * Save the correct value {fieldir_\d}filename.ext
+	 * Save Data
 	 *
 	 * @access	public
+	 * @param	submitted field data
+	 * @return	string to save
+	 *
 	 */
 	function save($data)
 	{
@@ -192,6 +224,7 @@ class Address_group_ft extends EE_Fieldtype {
 			$address[] = $this->EE->input->post($key.'_field_id_'.$this->field_id);
 		}
 		
+		// We could do something nicer, such as json array here
 		return implode('|', $address);
 	}
 
@@ -240,6 +273,11 @@ class Address_group_ft extends EE_Fieldtype {
 	 */
 	function validate($data)
 	{
+		// Validation is a bit tricky with this one.  Note that typically, an empty 'required' field
+		// will be cause by the API before getting to this point.  Which is a problem, here.
+		// The field data is actually in our city/stat/zip fields, not field_id_x.  So- we fudge 
+		// some data in there and do the actual required check here!
+		
 		$this->EE->lang->loadfile('address_group');
 		$total = count($this->address_fields);
 		$valid = 0;
@@ -259,7 +297,7 @@ class Address_group_ft extends EE_Fieldtype {
 			}		
 		}
 
-
+		//  Done with standard 'required check, we do something a bit more custom
 		// If any field has content?  All address fields must be filled out
 		if ($valid == 0 OR $valid == $total)
 		{
