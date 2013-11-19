@@ -87,10 +87,8 @@ class Tosconf_ext {
 			return;
 		}
 
-
-		
 		// If the cookie is set- allow them through
-		if (ee()->input->cookie('tos_confirmed') != FALSE)
+		if (ee()->input->cookie('TOSaccept') != FALSE)
 		{
 			return;
 		}
