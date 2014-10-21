@@ -63,7 +63,7 @@ class Date_param {
 	{
 ob_start();
 ?>
-{exp:date_param offset="-86400" format="YYYY-MM-DD HH:MM"}
+{exp:date_param offset="-86400" format="%Y-%m-%d %H:%i"}
 Will return the current date minus 86400 seconds, i.e., 24 hours ago.
 
 Designed to be used in the channel entry parameter as a start_on date.
