@@ -8,3 +8,4 @@ To use as the parameter in another tag, use the parse parameter in the outer tag
 {exp:channel:entries parse="inward" dynamic="no" category="{exp:piped sql='Select cat_id FROM exp_categories WHERE cat_url_title=^{segment_4}^'}"}
 
 Note the use of ^ in place of a double quote.  Any ^ is string replaced by a ".
+
